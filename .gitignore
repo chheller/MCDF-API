@@ -2,3 +2,7 @@ node_modules
 cats
 env.sh
 yarn-error.log
+.DS_Store
+npm-debug.log
+yarn-error.log
+**/ssl/**
