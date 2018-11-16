@@ -1,25 +1,38 @@
 import { connect, connection } from 'mongoose';
 import { Application } from 'express';
 import { Server, createServer } from 'https';
-import router from '../controllers';
+import { CoreRouter } from '../controllers';
 import { Environment } from './config/environment';
 import { readFile } from 'fs';
 import { promisify } from 'util';
-
+import { Middleware } from './middleware';
+import { AccessControlService } from '../auth/access-control';
+import Grants, { GrantDocument } from '../models/auth/access-control';
 const readFileAsync = promisify(readFile);
 
 // DB setup, move
 
 export default class Stator {
   private server: Server;
+  private accessControlService: AccessControlService;
   constructor(private app: Application, private env: Environment) {}
   public async init() {
     await this.initDB();
+    // Initialize grants from database
+    const grants = (await Grants.find()).map((grant: GrantDocument) => {
+      const { role, resource, action, attributes, possession } = grant;
+      return { role, resource, action, attributes, possession };
+    });
+    this.accessControlService = new AccessControlService(grants);
     this.initRoutes();
   }
+
   private initLogger() {}
+
   private initRoutes() {
-    this.app.use('/api', router);
+    const middleware = new Middleware(this.accessControlService);
+    const router = new CoreRouter(middleware);
+    this.app.use('/api', router.initializeRoutes());
   }
 
   private async initDB() {
@@ -36,8 +49,6 @@ export default class Stator {
     connection.on('open', function() {});
   }
 
-  private initMiddleware() {}
-
   public async start(options: { port: number; hostname?: string; backlog?: number }) {
     const { port, hostname, backlog } = options;
     try {
@@ -53,7 +64,7 @@ export default class Stator {
         console.log(`listening at ${address.address}:${address.port}`);
       });
     } catch (err) {
-      console.error(err);
+      console.error('[server] ', err);
     }
   }
   public async stop() {

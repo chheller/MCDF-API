@@ -1,15 +1,20 @@
 import * as express from 'express';
-import catRoutes from './cats.routes';
+import { CatRoutes } from './cats.routes';
 import authRoutes from './auth.routes';
+import { IMiddleware, Middleware } from '../core/middleware';
 const router = express.Router();
 
-router.use(function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-});
-
-router.use(catRoutes);
 router.use(authRoutes);
 
-export default router;
+export interface Router {
+  initializeRoutes(): void;
+}
+
+export class CoreRouter implements Router {
+  constructor(private middleware: IMiddleware) {}
+  initializeRoutes() {
+    const routes = [new CatRoutes(this.middleware)];
+    routes.forEach(route => router.use(route.initializeRoutes()));
+    return router;
+  }
+}

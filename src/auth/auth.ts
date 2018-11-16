@@ -1,9 +1,11 @@
 import { verify, sign } from 'jsonwebtoken';
-import { reduce } from 'lodash';
+import { logger } from '../core/logger';
 
 export function verifyJWToken(token: string) {
+  token = token.split(' ')[1];
   return new Promise((resolve, reject) => {
-    verify(token, process.env.JWT_SECRET, (err: Error, decodedToken: string) => {
+    verify(token, process.env.JWT_SECRET, {}, (err: Error, decodedToken: string) => {
+      console.log(decodedToken);
       if (err || !decodedToken) {
         return reject(err);
       }
@@ -12,35 +14,31 @@ export function verifyJWToken(token: string) {
   });
 }
 
-export function createJWToken(details: { maxAge?: number; sessionData?: any }) {
-  if (typeof details !== 'object') {
-    details = {};
-  }
-  if (!details.maxAge || typeof details.maxAge !== 'number') {
-    details.maxAge = 3600;
-  }
-
-  details.sessionData = reduce(
-    details.sessionData || {},
-    (memo: { [key: string]: any }, val: any, key: string) => {
-      if (typeof val !== 'function' && key !== 'password') {
-        memo[key] = val;
-      }
-      return memo;
-    },
-    {}
-  );
-
-  const token = sign(
-    {
-      data: details.sessionData
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: details.maxAge,
-      algorithm: 'HS256'
+export function createJWToken(details: {
+  payload: { userId: string; role: string };
+  maxAge?: number;
+}) {
+  try {
+    if (!details.maxAge || typeof details.maxAge !== 'number') {
+      details.maxAge = 3600;
     }
-  );
-
-  return token;
+    const { userId, role } = details.payload;
+    return new Promise((resolve, reject) => {
+      sign(
+        { userId, role },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: details.maxAge
+        },
+        (err, signed) => {
+          if (err) reject(err);
+          else resolve(signed);
+        }
+      );
+    });
+  } catch (err) {
+    err = { message: err.message, stack: err.stack };
+    logger.error('[auth:createJWToken]', err);
+    throw err;
+  }
 }
