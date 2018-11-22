@@ -1,4 +1,10 @@
 node_modules
-cats
+/cats
 env.sh
 yarn-error.log
+.DS_Store
+npm-debug.log
+yarn-error.log
+**/ssl/**
+dist
+/default_grants.json
