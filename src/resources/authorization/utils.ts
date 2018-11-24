@@ -1,5 +1,5 @@
 import { verify, sign } from 'jsonwebtoken';
-import { logger } from '../core/logger';
+import { logger } from '../../core/logger';
 
 export function verifyJWToken(token: string) {
   token = token.split(' ')[1];
