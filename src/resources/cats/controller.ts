@@ -1,38 +1,18 @@
 import * as express from 'express';
-import Cat, { CatsDocument } from '../models/cats/cat';
+import Cat, { CatsDocument } from './model';
 import * as uuidV4 from 'uuid/v4';
 import { Request, Response, NextFunction } from 'express';
-import { IMiddleware } from '../core/middleware';
-import { Router } from '.';
-const router = express.Router();
+import { controller, post, get, patch } from '../../core/decorators/express-route-decorators';
+import { BaseController } from '../../global/base-controller';
+import { isAuthorized, isAuthenticated } from '../../core/middleware';
 
-export class CatRoutes implements Router {
-  constructor(private middleware: IMiddleware) {}
-
-  initializeRoutes() {
-    router.post(
-      '/cat',
-      [this.middleware.isAuthenticated, this.middleware.isAuthorized('create', 'cats')],
-      this.createCat
-    );
-    router.patch(
-      '/cat/:resourceOwnerId/:imageId',
-      [this.middleware.isAuthenticated, this.middleware.isAuthorized('update', 'cats', true)],
-      this.updateCat
-    );
-    router.get(
-      '/cats',
-      [this.middleware.isAuthenticated, this.middleware.isAuthorized('read', 'cats')],
-      this.readCats
-    );
-    router.get(
-      '/cats/:resourceOwnerId',
-      [this.middleware.isAuthenticated, this.middleware.isAuthorized('read', 'cats', true)],
-      this.readCatsById
-    );
-    return router;
+@controller('/cats')
+export class CatController extends BaseController {
+  constructor(router?: express.Router) {
+    super(router);
   }
 
+  @post('')
   private createCat(req: Request, res: Response, next: NextFunction) {
     //create a cat or something
     try {
@@ -61,6 +41,7 @@ export class CatRoutes implements Router {
     }
   }
 
+  @get('', isAuthenticated, isAuthorized('read', 'cats'))
   private readCats(req: Request, res: Response, next: NextFunction) {
     if (res.locals.permissions.granted) {
       console.log(res.locals.permissions);
@@ -74,6 +55,7 @@ export class CatRoutes implements Router {
       return res.status(403).send('Invalid Authorization');
     }
   }
+  @get('/:resourceOwnerId', isAuthenticated, isAuthorized('read', 'cats', true))
   private readCatsById(req: Request, res: Response, next: NextFunction) {
     console.log(res.locals.permissions);
     if (res.locals.permissions.granted) {
@@ -91,6 +73,7 @@ export class CatRoutes implements Router {
     }
   }
 
+  @patch('/:resourceOwnerId')
   private updateCat(req: Request, res: Response, next: NextFunction) {
     console.log(req.params);
     console.log(res.locals.permissions.granted);

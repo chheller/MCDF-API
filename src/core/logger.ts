@@ -1,9 +1,11 @@
 import { createLogger, format } from 'winston';
 import winston = require('winston');
-import { Format } from 'logform';
+import { Format, TransformableInfo } from 'logform';
 import * as TransportStream from 'winston-transport';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { json } from 'body-parser';
+import { BaseError } from 'make-error';
 
 type TransportType = 'File' | 'Console' | 'Stream';
 
@@ -55,12 +57,18 @@ class Logger {
           case 'Console':
             return new winston.transports.Console({
               format: transport.transportFormat,
-              level
+              level,
+              eol: '\r\n'
             });
         }
       })
     );
-    this.logger = createLogger({ transports: loggerTransports, levels: LoggerLevels.levels });
+
+    this.logger = createLogger({
+      transports: loggerTransports,
+      levels: LoggerLevels.levels,
+      format: format.combine(format.timestamp(), format.splat())
+    });
   }
 
   public addTransport(transport: TransportStream) {
@@ -68,24 +76,16 @@ class Logger {
   }
 }
 
-const customFormat = ({
-  timestamp,
-  level,
-  message,
-  ...args
-}: {
-  timestamp: string;
-  level: string;
-  message: string;
-}) => {
+const customFormat = ({ timestamp, level, message, meta }: TransformableInfo) => {
   try {
     return `${timestamp} ${level}: ${message} ${
-      Object.keys(args).length ? JSON.stringify(args, null, 2) : ''
+      meta ? JSON.stringify(meta, null, 2).replace(/\\n/gi, '\n') : ''
     }`;
   } catch (err) {
     console.error(err);
   }
 };
+
 export const logger = new Logger('debug', [
   {
     transportType: 'File',
@@ -96,11 +96,9 @@ export const logger = new Logger('debug', [
     transportType: 'Console',
     transportFormat: format.combine(
       format.colorize(),
-      format.align(),
-      format.timestamp(),
-      // format.splat(),
       format.prettyPrint(),
-      format.printf(customFormat)
+      format.printf(customFormat),
+      format.align()
     )
   }
 ]).logger;

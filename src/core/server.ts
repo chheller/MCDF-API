@@ -1,38 +1,39 @@
 import { connect, connection } from 'mongoose';
 import { Application } from 'express';
 import { Server, createServer } from 'https';
-import { CoreRouter } from '../controllers';
+import * as express from 'express';
 import { Environment } from './config/environment';
 import { readFile } from 'fs';
 import { promisify } from 'util';
-import { Middleware } from './middleware';
-import { AccessControlService } from '../auth/access-control';
-import Grants, { GrantDocument } from '../models/auth/access-control';
+import { logger } from './logger';
+import { handleResponse } from './middleware';
+import { json, urlencoded } from 'body-parser';
+import { join } from 'path';
+import { NextFunction } from 'connect';
+import routes from './router';
 const readFileAsync = promisify(readFile);
 
 // DB setup, move
 
 export default class Stator {
   private server: Server;
-  private accessControlService: AccessControlService;
-  constructor(private app: Application, private env: Environment) {}
+  private app: Application;
+  constructor(private env: Environment) {
+    this.app = this.app || express();
+  }
   public async init() {
     await this.initDB();
-    // Initialize grants from database
-    const grants = (await Grants.find()).map((grant: GrantDocument) => {
-      const { role, resource, action, attributes, possession } = grant;
-      return { role, resource, action, attributes, possession };
-    });
-    this.accessControlService = new AccessControlService(grants);
-    this.initRoutes();
+    await this.composeMiddleware();
   }
 
   private initLogger() {}
 
-  private initRoutes() {
-    const middleware = new Middleware(this.accessControlService);
-    const router = new CoreRouter(middleware);
-    this.app.use('/api', router.initializeRoutes());
+  private async composeMiddleware() {
+    this.app.use(urlencoded({ extended: true }));
+    this.app.use(json());
+    this.app.use('/cats', express.static(join(__dirname, '../cats')));
+    this.app.use('/api', await routes());
+    this.app.use(handleResponse);
   }
 
   private async initDB() {

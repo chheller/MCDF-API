@@ -1,5 +1,5 @@
 import { Schema, model, Document } from 'mongoose';
-import { toPOJSO } from '../utils';
+import { toPOJSO } from '../../global/utils';
 
 const catImgSchema = new Schema({
   id: String,
