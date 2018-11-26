@@ -8,3 +8,4 @@ yarn-error.log
 **/ssl/**
 dist
 /default_grants.json
+logs/**
