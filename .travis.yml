@@ -4,8 +4,8 @@ node_js: 10
 services:
   - docker
 install:
-  - docker run -v $(pwd):/opt/stator --env-file env.list chheller/stator yarn
-  - docker run -v $(pwd):/opt/stator --env-file env.list chheller/stator yarn build
+  - docker run -v $(pwd):/opt/stator chheller/stator yarn
+  - docker run -v $(pwd):/opt/stator chheller/stator yarn build
   - docker build -t chheller/stator -f docker/production.dockerfile .
 
 before_deploy:
