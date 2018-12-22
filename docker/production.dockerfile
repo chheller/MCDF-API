@@ -5,5 +5,6 @@ WORKDIR /opt/stator
 
 COPY ./package.json /opt/stator
 COPY dist /opt/stator/dist
+COPY node_modules /opt/stator/node_modules
 
 CMD ["yarn", "start"]`
