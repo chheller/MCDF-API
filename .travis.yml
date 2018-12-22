@@ -4,12 +4,12 @@ node_js: 10
 services:
   - docker
 install:
+  - travis_retry docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker run -v $(pwd):/opt/stator chheller/stator yarn
   - docker run -v $(pwd):/opt/stator chheller/stator yarn build
   - docker build -t chheller/stator -f docker/production.dockerfile .
 
 before_deploy:
-  - travis_retry docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker push chheller/stator
 deploy:
   provider: script
