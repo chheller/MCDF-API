@@ -46,6 +46,7 @@ class Logger {
       transports.map(transport => {
         switch (transport.transportType) {
           case 'File':
+            if (!existsSync('logs')) mkdirSync('logs');
             if (!existsSync(`logs/${transport.fileName}`)) {
               mkdirSync(`logs/${transport.fileName}`);
             }

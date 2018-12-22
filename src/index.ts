@@ -9,5 +9,5 @@ process.on('unhandledRejection', (reason, listener) => {
 (async () => {
   const server = new Stator(env);
   await server.init();
-  await server.start({ port: 8081, hostname: 'localhost' });
+  await server.start({ port: 8080 });
 })();
