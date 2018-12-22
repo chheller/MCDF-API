@@ -6,13 +6,12 @@ services:
 install:
   - docker build -t chheller/stator -f docker/production.dockerfile .
   - docker run -v $(pwd):/opt/stator --env-file env.list chheller/stator yarn
-  - docker run -v $(pwd):/opt/stator --env-file env.list chheller/stator yarn add bcrypt --force
   - docker run -v $(pwd):/opt/stator --env-file env.list chheller/stator yarn build
 deploy:
-  - travis_retry docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - docker push chheller/stator
   provider: script
   script: bash .travis/deploy.sh $DOCKER_SWARM_HOST_IP
   skip_cleanup: true
   on:
     branch: master
+  - travis_retry docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - docker push chheller/stator
