@@ -31,7 +31,7 @@ export default class Stator {
     this.app.use(urlencoded({ extended: true }));
     this.app.use(json());
     this.app.use('/cats', express.static(join(__dirname, '../cats')));
-    this.app.use('/api', await routes());
+    this.app.use('/', await routes());
     this.app.use(handleResponse);
   }
 
