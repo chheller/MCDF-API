@@ -1,20 +1,20 @@
-import { connect, connection } from 'mongoose';
-import { Application } from 'express';
-import { Server, createServer } from 'http';
-import * as express from 'express';
-import { Environment } from './config/environment';
-import { readFile } from 'fs';
-import { promisify } from 'util';
-import { logger } from './logger';
-import { handleResponse } from './middleware';
-import { json, urlencoded } from 'body-parser';
-import { join } from 'path';
-import routes from './router';
+import { connect, connection } from "mongoose";
+import { Application } from "express";
+import { Server, createServer } from "http";
+import * as express from "express";
+import { Environment } from "./config/environment";
+import { readFile } from "fs";
+import { promisify } from "util";
+import { logger } from "./logger";
+import { handleResponse } from "./middleware";
+import { json, urlencoded } from "body-parser";
+import { join } from "path";
+import routes from "./router";
 const readFileAsync = promisify(readFile);
 
 // DB setup, move
 
-export default class Stator {
+export default class MCDFServer {
   private server: Server;
   private app: Application;
   constructor(private env: Environment) {
@@ -30,29 +30,37 @@ export default class Stator {
   private async composeMiddleware() {
     this.app.use(urlencoded({ extended: true }));
     this.app.use(json());
-    this.app.use('/cats', express.static(join(__dirname, '../cats')));
-    this.app.use('/', await routes());
+    this.app.use("/cats", express.static(join(__dirname, "../cats")));
+    this.app.use("/", await routes());
     this.app.use(handleResponse);
   }
 
   private async initDB() {
     try {
+      const mongoConnectionString = `mongodb://${
+        this.env.MONGO_ADMIN_USERNAME
+      }${
+        this.env.MONGO_ADMIN_PASSWORD && this.env.MONGO_ADMIN_USERNAME
+          ? `:${this.env.MONGO_ADMIN_PASSWORD}@${this.env.MONGO_HOSTNAME}`
+          : ``
+      }:${this.env.MONGO_PORT}/rotor`;
+      console.log({ mongoConnectionString });
       await connect(
-        `mongodb://${this.env.MONGO_ADMIN_USERNAME}${
-          this.env.MONGO_ADMIN_PASSWORD && this.env.MONGO_ADMIN_USERNAME
-            ? `:${this.env.MONGO_ADMIN_PASSWORD}@${this.env.MONGO_HOSTNAME}`
-            : ``
-        }:${this.env.MONGO_PORT}/rotor`,
+        mongoConnectionString,
         { useNewUrlParser: true }
       );
     } catch (err) {
       console.error(err);
     }
 
-    connection.on('open', function() {});
+    connection.on("open", function() {});
   }
 
-  public async start(options: { port: number; hostname?: string; backlog?: number }) {
+  public async start(options: {
+    port: number;
+    hostname?: string;
+    backlog?: number;
+  }) {
     const { port, hostname, backlog } = options;
     try {
       this.server = createServer(this.app);
@@ -61,7 +69,7 @@ export default class Stator {
         console.log(`listening at ${address.address}:${address.port}`);
       });
     } catch (err) {
-      console.error('[server] ', err);
+      console.error("[server] ", err);
     }
   }
   public async stop() {

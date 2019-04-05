@@ -35,7 +35,7 @@
   },
   "scripts": {
     "start:dev": "./node_modules/nodemon/bin/nodemon.js",
-    "dev": "env $(grep -v '^#' env.list | xargs -0) ts-node src/index.ts",
+    "dev": "env $(grep -v '^#' env.list | sed  's/\r//g' | xargs -0)  ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "echo No Tests"

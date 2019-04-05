@@ -1,10 +1,13 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import { controller, post } from '../../core/decorators/express-route-decorators';
-import { logger } from '../../core/logger';
-import { object, string, validate } from 'joi';
-import svcAuthentication, { IAuthSvc, AuthModel, IUser } from './model';
-import { MalformedRequestError } from '../../global/errors';
-import { BaseController } from '../../global/base-controller';
+import { Router, Request, Response, NextFunction } from "express";
+import {
+  controller,
+  post
+} from "../../core/decorators/express-route-decorators";
+import { logger } from "../../core/logger";
+import { object, string, validate } from "joi";
+import svcAuthentication, { IAuthSvc, AuthModel, IUser } from "./model";
+import { MalformedRequestError } from "../../global/errors";
+import { BaseController } from "../../global/base-controller";
 
 const loginSchema = object()
   .keys({
@@ -12,7 +15,7 @@ const loginSchema = object()
     email: string().email(),
     password: string()
   })
-  .or('username', 'email');
+  .or("username", "email");
 
 const signupSchema = object().keys({
   username: string().required(),
@@ -22,12 +25,12 @@ const signupSchema = object().keys({
   password: string().required()
 });
 
-@controller('/authorization')
+@controller("/authorization")
 export class AuthController extends BaseController {
   constructor(router?: Router, private authSvc: IAuthSvc = svcAuthentication) {
     super(router);
   }
-  @post('/login')
+  @post("/login")
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { error, value } = validate(req.body, loginSchema);
@@ -42,7 +45,7 @@ export class AuthController extends BaseController {
     }
   }
 
-  @post('/signup')
+  @post("/signup")
   public async signup(req: Request, res: Response, next: NextFunction) {
     try {
       const { error, value } = validate(req.body, signupSchema);
@@ -53,8 +56,11 @@ export class AuthController extends BaseController {
 
       const newAuthorizedUser = await this.authSvc.createNewUser(user);
       res.status(201);
-      res.json({ message: 'User successfully created!' });
-      logger.notice(`[auth.routes.ts:signup] Created new user `, newAuthorizedUser.toJSON());
+      res.json({ message: "User successfully created!" });
+      logger.notice(
+        `[auth.routes.ts:signup] Created new user `,
+        newAuthorizedUser.toJSON()
+      );
     } catch (err) {
       return next(err);
     }

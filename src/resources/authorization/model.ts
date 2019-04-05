@@ -1,8 +1,12 @@
-import { Schema, model, Document } from 'mongoose';
-import { hash, compare } from 'bcrypt';
-import { createJWToken } from './utils';
-import { UnauthorizedAccessError, NotFoundError, ApiError } from '../../global/errors';
-import * as v4 from 'uuid/v4';
+import { Schema, model, Document } from "mongoose";
+import { hash, compare } from "bcrypt";
+import { createJWToken } from "./utils";
+import {
+  UnauthorizedAccessError,
+  NotFoundError,
+  ApiError
+} from "../../global/errors";
+import * as v4 from "uuid/v4";
 
 const authSchema = new Schema({
   username: String,
@@ -20,7 +24,7 @@ export interface AuthDocument extends Document {
   id: string;
 }
 
-export const AuthModel = model('auth', authSchema);
+export const AuthModel = model("auth", authSchema);
 
 export interface IAuthSvc {
   login(user: IUser): Promise<string>;
@@ -43,7 +47,9 @@ class AuthSvc implements IAuthSvc {
   constructor() {}
 
   public async login({ email, username, password }: IUser): Promise<string> {
-    const user = (await AuthModel.findOne((email && { email }) || { username })) as AuthDocument;
+    const user = (await AuthModel.findOne(
+      (email && { email }) || { username }
+    )) as AuthDocument;
     if (!user) throw new NotFoundError(`User not found`);
     const isAuthorized = compare(password, user.password);
 
@@ -53,21 +59,33 @@ class AuthSvc implements IAuthSvc {
       })) as string;
       return token;
     } else {
-      throw new UnauthorizedAccessError('Invalid credentials');
+      throw new UnauthorizedAccessError("Invalid credentials");
     }
   }
 
-  public async createNewUser({ username, email, password }: IUser): Promise<Document> {
+  public async createNewUser({
+    username,
+    email,
+    password
+  }: IUser): Promise<Document> {
     let unique = (await AuthModel.count({ email })) === 0;
     if (!unique) {
       throw new ApiError({
         statusCode: 409,
-        error: { name: 'user_exists', message: 'User with this email already exists' }
+        error: {
+          name: "user_exists",
+          message: "User with this email already exists"
+        }
       });
     }
 
     password = await hash(password, 15);
-    const newAuthorizedUser = new AuthModel({ username, email, password, id: v4() });
+    const newAuthorizedUser = new AuthModel({
+      username,
+      email,
+      password,
+      id: v4()
+    });
     return await newAuthorizedUser.save();
   }
 }
