@@ -25,7 +25,7 @@ const signupSchema = object().keys({
   password: string().required()
 });
 
-@controller("/authorization")
+@controller("/authn")
 export class AuthController extends BaseController {
   constructor(router?: Router, private authSvc: IAuthSvc = svcAuthentication) {
     super(router);

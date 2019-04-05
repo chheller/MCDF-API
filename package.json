@@ -7,10 +7,12 @@
   "author": "Charles Heller",
   "license": "MIT",
   "dependencies": {
+    "@types/cors": "^2.8.4",
     "accesscontrol": "2.2.1",
     "axios": "0.18.0",
     "bcrypt": "^3.0.2",
     "body-parser": "1.18.3",
+    "cors": "^2.8.5",
     "express": "4.16.4",
     "express-validator": "5.3.0",
     "joi": "14.3.0",
@@ -34,7 +36,7 @@
     "typescript": "3.2.2"
   },
   "scripts": {
-    "start:dev": "./node_modules/nodemon/bin/nodemon.js",
+    "start:dev": "nodemon",
     "dev": "env $(grep -v '^#' env.list | sed  's/\r//g' | xargs -0)  ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",

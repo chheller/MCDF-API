@@ -8,7 +8,8 @@ import { promisify } from "util";
 import { logger } from "./logger";
 import { handleResponse } from "./middleware";
 import { json, urlencoded } from "body-parser";
-import { join } from "path";
+import * as cors from "cors";
+
 import routes from "./router";
 const readFileAsync = promisify(readFile);
 
@@ -30,8 +31,8 @@ export default class MCDFServer {
   private async composeMiddleware() {
     this.app.use(urlencoded({ extended: true }));
     this.app.use(json());
-    this.app.use("/cats", express.static(join(__dirname, "../cats")));
-    this.app.use("/", await routes());
+    this.app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+    this.app.use("/api", await routes());
     this.app.use(handleResponse);
   }
 
