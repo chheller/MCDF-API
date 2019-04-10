@@ -5,12 +5,12 @@ services:
   - docker
 install:
   - travis_retry docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-  - docker run -v $(pwd):/opt/stator chheller/stator yarn
-  - docker run -v $(pwd):/opt/stator chheller/stator yarn build
-  - docker build -t chheller/stator -f docker/production.dockerfile .
+  - docker run -v $(pwd):/opt/mcdf-api chheller/mcdf-api yarn
+  - docker run -v $(pwd):/opt/mcdf-api chheller/mcdf-api yarn build
+  - docker build -t chheller/mcdf-api -f docker/production.dockerfile .
 
 before_deploy:
-  - docker push chheller/stator
+  - docker push chheller/mcdf-api
 deploy:
   provider: script
   script: bash .travis/deploy.sh $DOCKER_SWARM_HOST_IP
