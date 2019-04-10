@@ -1,10 +1,10 @@
 FROM mhart/alpine-node:10
 RUN apk update && apk --no-cache add --virtual builds-deps build-base python
-VOLUME ["/opt/stator"]
-WORKDIR /opt/stator
+VOLUME ["/opt/mcdf/api"]
+WORKDIR /opt/mcdf/api
 
-COPY ./package.json /opt/stator
-COPY dist /opt/stator/dist
-COPY node_modules /opt/stator/node_modules
+COPY ./package.json /opt/mcdf/api
+COPY dist /opt/mcdf/api/dist
+COPY node_modules /opt/mcdf/api/node_modules
 
 CMD ["yarn", "start"]`
