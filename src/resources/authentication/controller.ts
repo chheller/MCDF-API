@@ -34,9 +34,7 @@ export class AuthController extends BaseController {
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const refreshTokenSigned = req.signedCookies["authentication-refresh"];
-      console.log({ refreshTokenSigned });
       if (!refreshTokenSigned) {
-        console.log("I threw up");
         throw "Unauthenticated";
       }
       const claimToken = await this.authSvc.refresh(refreshTokenSigned);
