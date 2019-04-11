@@ -6,6 +6,7 @@ import { Environment } from "./config/environment";
 import { readFile } from "fs";
 import { promisify } from "util";
 import { logger } from "./logger";
+import * as cookieParser from "cookie-parser";
 import { handleResponse } from "./middleware";
 import { json, urlencoded } from "body-parser";
 import * as cors from "cors";
@@ -31,6 +32,7 @@ export default class MCDFServer {
   private async composeMiddleware() {
     this.app.use(urlencoded({ extended: true }));
     this.app.use(json());
+    this.app.use(cookieParser(this.env.COOKIE_SECRET));
     this.app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
     this.app.use("/api", await routes());
     this.app.use(handleResponse);

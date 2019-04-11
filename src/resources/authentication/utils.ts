@@ -1,31 +1,34 @@
-import { verify, sign } from 'jsonwebtoken';
-import { logger } from '../../core/logger';
+import { verify, sign } from "jsonwebtoken";
+import { logger } from "../../core/logger";
 
-export function verifyJWToken(token: string) {
-  token = token.split(' ')[1];
+export function verifyJWToken<T>(token: string): Promise<T> {
   return new Promise((resolve, reject) => {
-    verify(token, process.env.JWT_SECRET, {}, (err: Error, decodedToken: string) => {
-      console.log(decodedToken);
-      if (err || !decodedToken) {
-        return reject(err);
+    verify(
+      token,
+      process.env.JWT_SECRET,
+      {},
+      (err: Error, decodedToken: any) => {
+        if (err || !decodedToken) {
+          return reject(err);
+        }
+        return resolve(decodedToken as T);
       }
-      return resolve(decodedToken);
-    });
+    );
   });
 }
 
-export function createJWToken(details: {
-  payload: { userId: string; role: string };
+export function createJWToken<T extends Object>(details: {
+  payload: T;
   maxAge?: number;
-}) {
+}): Promise<string> {
   try {
-    if (!details.maxAge || typeof details.maxAge !== 'number') {
+    if (!details.maxAge || typeof details.maxAge !== "number") {
       details.maxAge = 3600;
     }
-    const { userId, role } = details.payload;
+
     return new Promise((resolve, reject) => {
       sign(
-        { userId, role },
+        { ...details.payload },
         process.env.JWT_SECRET,
         {
           expiresIn: details.maxAge
@@ -38,7 +41,7 @@ export function createJWToken(details: {
     });
   } catch (err) {
     err = { message: err.message, stack: err.stack };
-    logger.error('[auth:createJWToken]', err);
+    logger.error("[auth:createJWToken]", err);
     throw err;
   }
 }

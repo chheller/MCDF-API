@@ -1,12 +1,14 @@
 import { Schema, model, Document } from "mongoose";
 import { hash, compare } from "bcrypt";
-import { createJWToken } from "./utils";
+import { createJWToken, verifyJWToken } from "./utils";
 import {
   UnauthorizedAccessError,
   NotFoundError,
   ApiError
 } from "../../global/errors";
 import * as v4 from "uuid/v4";
+import { create } from "domain";
+import { string } from "joi";
 
 const authSchema = new Schema({
   username: String,
@@ -27,7 +29,8 @@ export interface AuthDocument extends Document {
 export const AuthModel = model("auth", authSchema);
 
 export interface IAuthSvc {
-  login(user: IUser): Promise<string>;
+  login(user: IUser): Promise<{ claimToken: string; refreshToken: string }>;
+  refresh(refresToken: string): Promise<string>;
   createNewUser(user: INewUserDetails): Promise<Document>;
 }
 
@@ -43,10 +46,15 @@ export interface INewUserDetails {
   username: string;
   password: string;
 }
+
 class AuthSvc implements IAuthSvc {
   constructor() {}
 
-  public async login({ email, username, password }: IUser): Promise<string> {
+  public async login({
+    email,
+    username,
+    password
+  }: IUser): Promise<{ claimToken: string; refreshToken: string }> {
     const user = (await AuthModel.findOne(
       (email && { email }) || { username }
     )) as AuthDocument;
@@ -54,15 +62,31 @@ class AuthSvc implements IAuthSvc {
     const isAuthorized = compare(password, user.password);
 
     if (isAuthorized) {
-      const token = (await createJWToken({
+      const claimToken = await createJWToken<{ userId: string; role: string }>({
         payload: { userId: user.id, role: user.role }
-      })) as string;
-      return token;
+      });
+      const refreshToken = await createJWToken<{
+        userId: string;
+        role: string;
+      }>({
+        payload: { userId: user.id, role: user.role }
+      });
+      return { claimToken, refreshToken };
     } else {
       throw new UnauthorizedAccessError("Invalid credentials");
     }
   }
-
+  public async refresh(refreshToken: string): Promise<string> {
+    try {
+      const { userId } = await verifyJWToken<{ userId: string }>(refreshToken);
+      const claimToken = await createJWToken<{ userId: string }>({
+        payload: { userId }
+      });
+      return claimToken;
+    } catch (err) {
+      console.error(err);
+    }
+  }
   public async createNewUser({
     username,
     email,
