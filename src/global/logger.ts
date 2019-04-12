@@ -1,11 +1,9 @@
-import { createLogger, format } from 'winston';
-import winston = require('winston');
-import { Format, TransformableInfo } from 'logform';
-import * as TransportStream from 'winston-transport';
-import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
-import { json } from 'body-parser';
-import { BaseError } from 'make-error';
+import { Format, TransformableInfo } from 'logform';
+import { join } from 'path';
+import { createLogger, format } from 'winston';
+import * as TransportStream from 'winston-transport';
+import winston = require('winston');
 
 type TransportType = 'File' | 'Console' | 'Stream';
 

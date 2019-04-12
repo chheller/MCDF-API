@@ -1,17 +1,17 @@
-import { connect, connection } from "mongoose";
-import { Application } from "express";
-import { Server, createServer } from "http";
-import * as express from "express";
-import { Environment } from "./config/environment";
-import { readFile } from "fs";
-import { promisify } from "util";
-import { logger } from "./logger";
-import * as cookieParser from "cookie-parser";
-import { handleResponse } from "./middleware";
-import { json, urlencoded } from "body-parser";
-import * as cors from "cors";
+import { connect, connection } from 'mongoose';
+import { Application } from 'express';
+import { Server, createServer } from 'http';
+import * as express from 'express';
+import { Environment } from './config/environment';
+import { readFile } from 'fs';
+import { promisify } from 'util';
+import { logger } from '../global/logger';
+import * as cookieParser from 'cookie-parser';
+import { handleResponse } from './middleware';
+import { json, urlencoded } from 'body-parser';
+import * as cors from 'cors';
 
-import routes from "./router";
+import routes from './router';
 const readFileAsync = promisify(readFile);
 
 // DB setup, move
@@ -33,16 +33,14 @@ export default class MCDFServer {
     this.app.use(urlencoded({ extended: true }));
     this.app.use(json());
     this.app.use(cookieParser(this.env.COOKIE_SECRET));
-    this.app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
-    this.app.use("/api", await routes());
+    this.app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
+    this.app.use('/api', await routes());
     this.app.use(handleResponse);
   }
 
   private async initDB() {
     try {
-      const mongoConnectionString = `mongodb://${
-        this.env.MONGO_ADMIN_USERNAME
-      }${
+      const mongoConnectionString = `mongodb://${this.env.MONGO_ADMIN_USERNAME}${
         this.env.MONGO_ADMIN_PASSWORD && this.env.MONGO_ADMIN_USERNAME
           ? `:${this.env.MONGO_ADMIN_PASSWORD}@${this.env.MONGO_HOSTNAME}`
           : ``
@@ -56,14 +54,10 @@ export default class MCDFServer {
       console.error(err);
     }
 
-    connection.on("open", function() {});
+    connection.on('open', function() {});
   }
 
-  public async start(options: {
-    port: number;
-    hostname?: string;
-    backlog?: number;
-  }) {
+  public async start(options: { port: number; hostname?: string; backlog?: number }) {
     const { port, hostname, backlog } = options;
     try {
       this.server = createServer(this.app);
@@ -72,7 +66,7 @@ export default class MCDFServer {
         console.log(`listening at ${address.address}:${address.port}`);
       });
     } catch (err) {
-      console.error("[server] ", err);
+      console.error('[server] ', err);
     }
   }
   public async stop() {
