@@ -1,19 +1,7 @@
-import { Schema, Document, model } from 'mongoose';
+import { IUser } from "../../user/domain/model";
 
-const authSchema = new Schema({
-  username: String,
-  email: String,
-  password: String,
-  role: String,
-  id: String
-});
-
-export interface AuthDocument extends Document {
-  username: string;
-  email: string;
+export interface IUserAuthn extends IUser {
   password: string;
-  role: string;
+  refreshTokens: string[];
   id: string;
 }
-
-export const AuthModel = model('auth', authSchema);

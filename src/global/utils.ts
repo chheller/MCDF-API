@@ -1,5 +1,4 @@
 import { verify, sign } from "jsonwebtoken";
-import { logger } from './logger";
 
 export function toPOJSO() {
   return this.toObject({
@@ -10,7 +9,6 @@ export function toPOJSO() {
     }
   });
 }
-
 
 export function verifyJWToken<T>(token: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -28,21 +26,19 @@ export function verifyJWToken<T>(token: string): Promise<T> {
   });
 }
 
-export function createJWToken<T extends Object>(details: {
-  payload: T;
-  maxAge?: number;
-}): Promise<string> {
+export function createJWToken<T extends Object>(
+  payload: T,
+  options = {
+    maxAge: 3600
+  }
+): Promise<string> {
   try {
-    if (!details.maxAge || typeof details.maxAge !== "number") {
-      details.maxAge = 3600;
-    }
-
     return new Promise((resolve, reject) => {
       sign(
-        { ...details.payload },
+        { ...payload },
         process.env.JWT_SECRET,
         {
-          expiresIn: details.maxAge
+          expiresIn: options.maxAge
         },
         (err, signed) => {
           if (err) reject(err);
@@ -52,7 +48,7 @@ export function createJWToken<T extends Object>(details: {
     });
   } catch (err) {
     err = { message: err.message, stack: err.stack };
-    logger.error("[auth:createJWToken]", err);
+    // logger.error("[auth:createJWToken]", err);
     throw err;
   }
 }

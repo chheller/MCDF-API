@@ -1,24 +1,37 @@
-import { IUser, INewUserDetails } from '../domain/model';
-import { Response, ErrorResponse } from '../../../global/interfaces';
+import { NotImplementedResponse, Response } from "../../../global/interfaces";
+import { IUser } from "../../user/domain/model";
+import { IUserCredentials } from "../domain/model";
+import { AllAuthUsers } from "../infrastructure/repository";
+import { randomBytes } from "crypto";
 
 export interface IAuthInfrastructure {
-  generateRefreshToken(userId: string): Promise<Response<string>>;
+  saveRefreshTokenToUser(
+    userId: string,
+    token: string
+  ): Promise<Response<string>>;
   generateClaimToken(refreshToken: string): Promise<Response<string>>;
-  createNewUser(user: INewUserDetails): Promise<Response<IUser, INewUserDetails>>;
+  authenticateUser(
+    userCredentials: IUserCredentials
+  ): Promise<Response<IUser, {}>>;
 }
 
 export class AuthService {
-  constructor(private infrastructure: IAuthInfrastructure) {}
-
-  async generateRefreshToken(userId: string): Promise<Response<string>> {
-    return new ErrorResponse(500, userId, 'not_implemented');
-  }
+  constructor(private allAuthUsers = new AllAuthUsers()) {}
 
   async generateClaimToken(refreshToken: string): Promise<Response<string>> {
-    return new ErrorResponse(500, refreshToken, 'not_implemented');
+    return await this.allAuthUsers.generateClaimToken(refreshToken);
   }
 
-  async createNewUser(user: INewUserDetails): Promise<Response<IUser, INewUserDetails>> {
-    return new ErrorResponse(500, user, 'not_implemented');
+  async authenticateUser(
+    userCredentials: IUserCredentials
+  ): Promise<Response<IUser, {}>> {
+    return await this.allAuthUsers.authenticateUser(userCredentials);
+  }
+  async saveRefreshTokenToUser(userId: string): Promise<Response<string>> {
+    const refreshToken = this.generateRefreshToken();
+    return await this.allAuthUsers.saveRefreshTokenToUser(userId, refreshToken);
+  }
+  private generateRefreshToken(): string {
+    return randomBytes(128).toString("hex");
   }
 }

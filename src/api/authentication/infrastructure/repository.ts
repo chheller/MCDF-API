@@ -1,64 +1,89 @@
-import { IAuthInfrastructure } from '../application/service';
+import { compare } from "bcrypt";
+import { Collection, Db } from "mongodb";
+import environment from "../../../core/config/environment";
+import {
+  ErrorResponse,
+  NotFoundResponse,
+  Response,
+  SuccessResponse
+} from "../../../global/interfaces";
+import { connectToMongo, getCollection } from "../../../global/mongodb-utils";
+import { createJWToken } from "../../../global/utils";
+import { IUser } from "../../user/domain/model";
+import { IAuthInfrastructure } from "../application/service";
+import { IUserCredentials, IUserWithAuth } from "../domain/model";
+import { IUserAuthn } from "./model";
+import { logger } from "../../../global/logger";
 
-export class AuthImplementation implements IAuthInfrastructure {
-  constructor() {}
+export class AllAuthUsers implements IAuthInfrastructure {
+  private static db: Db;
+  private static collection: Collection<IUserAuthn>;
 
-  public async login({
-    email,
-    username,
-    password
-  }: IUser): Promise<{ claimToken: string; refreshToken: string }> {
-    const user = (await AuthModel.findOne((email && { email }) || { username })) as AuthDocument;
-    if (!user) throw new NotFoundError(`User not found`);
-    const isAuthorized = compare(password, user.password);
+  constructor(private authUsersCollection = AllAuthUsers.collection) {}
 
-    if (isAuthorized) {
-      const claimToken = await createJWToken<{ userId: string; role: string }>({
-        payload: { userId: user.id, role: user.role }
-      });
-      const refreshToken = await createJWToken<{
-        userId: string;
-        role: string;
-      }>({
-        payload: { userId: user.id, role: user.role }
-      });
-      return { claimToken, refreshToken };
-    } else {
-      throw new UnauthorizedAccessError('Invalid credentials');
-    }
+  public static async setup(usersDb = environment.USERS_DB_URI) {
+    AllAuthUsers.db = await connectToMongo(usersDb);
+    // TODO: Refactor into envvar
+    AllAuthUsers.collection = getCollection(AllAuthUsers.db, "auths");
   }
-  public async refresh(refreshToken: string): Promise<string> {
+
+  public async authenticateUser(
+    userCredentials: IUserCredentials
+  ): Promise<Response<IUser, {}>> {
     try {
-      const { userId } = await verifyJWToken<{ userId: string }>(refreshToken);
-      const claimToken = await createJWToken<{ userId: string }>({
-        payload: { userId }
-      });
-      return claimToken;
+      const { username, password } = userCredentials;
+
+      const authUser = await this.authUsersCollection.findOne({ username });
+      const isAuthorized = await compare(password, authUser.password);
+
+      if (isAuthorized) {
+        const { username, roles, id } = authUser;
+        return new SuccessResponse({ username, roles, id } as IUser);
+      } else {
+        return new NotFoundResponse();
+      }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
+      return new ErrorResponse();
     }
   }
-  public async createNewUser({ username, email, password }: IUser): Promise<Document> {
-    let unique = (await AuthModel.count({ email })) === 0;
-    if (!unique) {
-      throw new ApiError({
-        statusCode: 409,
-        error: {
-          name: 'user_exists',
-          message: 'User with this email already exists'
-        }
-      });
-    }
 
-    password = await hash(password, 15);
-    const newAuthorizedUser = new AuthModel({
-      username,
-      email,
-      password,
-      id: v4()
-    });
-    return await newAuthorizedUser.save();
+  public async generateClaimToken(
+    refreshToken: string
+  ): Promise<Response<string>> {
+    try {
+      const mongoResponse = await this.authUsersCollection.findOne({
+        refreshTokens: refreshToken
+      });
+      const claimToken = await createJWToken<IUserWithAuth>({
+        id: mongoResponse.id,
+        roles: mongoResponse.roles
+      });
+
+      return new SuccessResponse(claimToken);
+    } catch (err) {
+      // TODO: Handle errors like 'token not found' or errors creating the JWT
+      logger.error(err);
+      return new ErrorResponse(err);
+    }
+  }
+
+  public async saveRefreshTokenToUser(
+    userId: string,
+    token: string
+  ): Promise<Response<string>> {
+    try {
+      const mongoResponse = await this.authUsersCollection.findOneAndUpdate(
+        { id: userId },
+        { $push: { refreshTokens: token } }
+      );
+      if (mongoResponse.ok) {
+        return new SuccessResponse(token);
+      }
+    } catch (err) {
+      // TODO: Handle more specific errors
+      logger.error(err);
+      return new ErrorResponse(userId);
+    }
   }
 }
-
-export default new AuthSvc() as IAuthSvc;
