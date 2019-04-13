@@ -11,10 +11,7 @@ export interface INewUserDetails {
   password: string;
 }
 
-const signupSchema = object().keys({
+export const signupSchema = object().keys({
   username: string().required(),
-  email: string()
-    .email()
-    .required(),
   password: string().required()
 });

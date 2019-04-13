@@ -1,5 +1,6 @@
-import { compare } from "bcrypt";
+import { compare, hash } from "bcrypt";
 import { Collection, Db } from "mongodb";
+import { v4 } from "uuid";
 import environment from "../../../core/config/environment";
 import {
   ErrorResponse,
@@ -11,7 +12,7 @@ import {
 } from "../../../global/interfaces";
 import { connectToMongo, getCollection } from "../../../global/mongodb-utils";
 import { createJWToken } from "../../../global/utils";
-import { IUser } from "../../user/domain/model";
+import { INewUserDetails, IUser } from "../../user/domain/model";
 import { IAuthInfrastructure } from "../application/service";
 import { IUserCredentials, IUserWithAuth } from "../domain/model";
 import { IUserAuthn } from "./model";
@@ -83,6 +84,36 @@ export class AllAuthUsers implements IAuthInfrastructure {
     } catch (err) {
       // TODO: Handle more specific errors
       return new ErrorResponse(userId);
+    }
+  }
+  async createNewUser(newUser: INewUserDetails): Promise<Response<IUser, {}>> {
+    const { username, password } = newUser;
+    let unique = await this.authUsersCollection.countDocuments({
+      username: newUser.username
+    });
+    if (unique > 0) {
+      return new ErrorResponse({}, 409, "Username already exists");
+    }
+
+    const passwordHash: string = await hash(password, 15);
+    const newUserAccount = {
+      username,
+      roles: [""],
+      id: v4()
+    };
+    const newAuthorizedUser = {
+      ...newUserAccount,
+      refreshTokens: [""],
+      password: passwordHash
+    };
+
+    const mongoResponse = await this.authUsersCollection.insertOne(
+      newAuthorizedUser
+    );
+    if (mongoResponse.result.ok) {
+      return new SuccessResponse(newUserAccount);
+    } else {
+      return new ErrorResponse({});
     }
   }
 }

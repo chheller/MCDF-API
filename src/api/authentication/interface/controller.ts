@@ -10,6 +10,7 @@ import { BaseController } from "../../../global/base-controller";
 import { AuthService } from "../application/service";
 import { ResponseTypes } from "../../../global/interfaces";
 import environment from "../../../core/config/environment";
+import { INewUserDetails, signupSchema } from "../../user/domain/model";
 
 @controller("/auth")
 export class AuthController extends BaseController {
@@ -62,9 +63,18 @@ export class AuthController extends BaseController {
         return next(authenticateResponse);
     }
   }
-  @post("/unauthn")
-  public async test(req: Request, res: Response, next: NextFunction) {
-    res.status(401);
-    res.json({ message: "Unauthorized" });
+  @post("/signup", validateRequest<INewUserDetails>(signupSchema))
+  public async createNewUser(req: Request, res: Response, next: NextFunction) {
+    const newUserDetails = {
+      username: req.body.username,
+      password: req.body.password
+    };
+    const serviceResponse = await this.authService.createNewUser(
+      newUserDetails
+    );
+    switch (serviceResponse.type) {
+      case ResponseTypes.success:
+        res.status(200).json({ payload: serviceResponse.payload });
+    }
   }
 }

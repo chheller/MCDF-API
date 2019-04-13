@@ -42,6 +42,15 @@ export async function isAuthenticated(
 //   };
 // }
 
+export function responseTime(req: Request, res: Response, next: NextFunction) {
+  var start = new Date().getUTCMilliseconds();
+  res.on("header", function() {
+    var duration = new Date().getUTCMilliseconds() - start;
+    res.setHeader("X-Response-Time", duration + "ms");
+  });
+  next();
+}
+
 export async function handleResponse(
   err: any,
   req: Request,

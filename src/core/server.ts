@@ -1,18 +1,17 @@
-import { Application } from "express";
-import { Server, createServer } from "http";
-import * as express from "express";
-import { Environment } from "./config/environment";
-import { readFile } from "fs";
-import { promisify } from "util";
-import { logger } from "../global/logger";
-import * as cookieParser from "cookie-parser";
-import { handleResponse } from "./middleware";
 import { json, urlencoded } from "body-parser";
+import * as cookieParser from "cookie-parser";
 import * as cors from "cors";
-
-import routes from "./router";
+import * as express from "express";
+import { Application } from "express";
+import { readFile } from "fs";
+import { createServer, Server } from "http";
+import { promisify } from "util";
 import { AllAuthUsers } from "../api/authentication/infrastructure/repository";
-const readFileAsync = promisify(readFile);
+import { logger } from "../global/logger";
+import { Environment } from "./config/environment";
+import { handleResponse, responseTime } from "./middleware";
+import routes from "./router";
+import * as compression from "compression";
 
 // DB setup, move
 
@@ -33,6 +32,8 @@ export default class MCDFServer {
   }
 
   private async composeMiddleware() {
+    this.app.use(responseTime);
+    this.app.use(compression());
     this.app.use(urlencoded({ extended: true }));
     this.app.use(json());
     this.app.use(cookieParser(this.env.COOKIE_SECRET));
@@ -51,10 +52,10 @@ export default class MCDFServer {
       this.server = createServer(this.app);
       this.server.listen(port, hostname, backlog, () => {
         const address = this.server.address() as any;
-        console.log(`listening at ${address.address}:${address.port}`);
+        logger.info(`listening at ${address.address}:${address.port}`);
       });
     } catch (err) {
-      console.error("[server] ", err);
+      logger.error("[server] ", err);
     }
   }
   public async stop() {

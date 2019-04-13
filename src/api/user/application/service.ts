@@ -1,19 +1,7 @@
-import { NotImplementedResponse, Response } from "../../../global/interfaces";
-import { INewUserDetails, IUser } from "../domain/model";
 import { AllUsersMongo } from "../repository/allUsersMongo";
 
-export interface AllUsersService {
-  createNewUser(
-    user: INewUserDetails
-  ): Promise<Response<IUser, INewUserDetails>>;
-}
+export interface AllUsersService {}
 
 export class UsersService {
   constructor(private allUsersService = new AllUsersMongo()) {}
-
-  async createNewUser(
-    user: INewUserDetails
-  ): Promise<Response<IUser, INewUserDetails>> {
-    return new NotImplementedResponse();
-  }
 }

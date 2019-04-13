@@ -1,18 +1,26 @@
-import { existsSync, mkdirSync } from 'fs';
-import { Format, TransformableInfo } from 'logform';
-import { join } from 'path';
-import { createLogger, format } from 'winston';
-import * as TransportStream from 'winston-transport';
-import winston = require('winston');
+import { existsSync, mkdirSync } from "fs";
+import { Format, TransformableInfo } from "logform";
+import { join } from "path";
+import { createLogger, format } from "winston";
+import * as TransportStream from "winston-transport";
+import winston = require("winston");
 
-type TransportType = 'File' | 'Console' | 'Stream';
+type TransportType = "File" | "Console" | "Stream";
 
 interface CustomTransport {
   transportType: TransportType;
   transportFormat: Format;
   fileName?: string;
 }
-type LogLevel = 'emerg' | 'alert' | 'crit' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
+type LogLevel =
+  | "emerg"
+  | "alert"
+  | "crit"
+  | "error"
+  | "warning"
+  | "notice"
+  | "info"
+  | "debug";
 
 const LoggerLevels = {
   levels: {
@@ -26,14 +34,14 @@ const LoggerLevels = {
     debug: 7
   },
   colors: {
-    emerg: 'bold white redBG',
-    alert: 'bold orange',
-    crit: 'bold red',
-    error: 'red',
-    warning: 'yellow',
-    notice: 'white',
-    info: 'grey',
-    debug: 'cyan'
+    emerg: "bold white redBG",
+    alert: "bold orange",
+    crit: "bold red",
+    error: "red",
+    warning: "yellow",
+    notice: "white",
+    info: "grey",
+    debug: "cyan"
   }
 };
 
@@ -43,8 +51,8 @@ class Logger {
     const loggerTransports = [].concat(
       transports.map(transport => {
         switch (transport.transportType) {
-          case 'File':
-            if (!existsSync('logs')) mkdirSync('logs');
+          case "File":
+            if (!existsSync("logs")) mkdirSync("logs");
             if (!existsSync(`logs/${transport.fileName}`)) {
               mkdirSync(`logs/${transport.fileName}`);
             }
@@ -53,11 +61,11 @@ class Logger {
               level,
               filename: join(`logs/${transport.fileName}`, `/${level}.log`)
             });
-          case 'Console':
+          case "Console":
             return new winston.transports.Console({
               format: transport.transportFormat,
               level,
-              eol: '\r\n'
+              eol: "\r\n"
             });
         }
       })
@@ -75,24 +83,29 @@ class Logger {
   }
 }
 
-const customFormat = ({ timestamp, level, message, meta }: TransformableInfo) => {
+const customFormat = ({
+  timestamp,
+  level,
+  message,
+  meta
+}: TransformableInfo) => {
   try {
     return `${timestamp} ${level}: ${message} ${
-      meta ? JSON.stringify(meta, null, 2).replace(/\\n/gi, '\n') : ''
+      meta ? JSON.stringify(meta, null, 2).replace(/\\n/gi, "\n") : ""
     }`;
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 };
 
-export const logger = new Logger('debug', [
+export const logger = new Logger("debug", [
   {
-    transportType: 'File',
+    transportType: "File",
     transportFormat: format.json(),
-    fileName: 'request_logger'
+    fileName: "request_logger"
   },
   {
-    transportType: 'Console',
+    transportType: "Console",
     transportFormat: format.combine(
       format.colorize(),
       format.prettyPrint(),

@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import { Response, ServiceResponse } from "../../../global/interfaces";
-import { IUser } from "../../user/domain/model";
+import { IUser, INewUserDetails } from "../../user/domain/model";
 import { IUserCredentials } from "../domain/model";
 import { AllAuthUsers } from "../infrastructure/repository";
 
@@ -13,6 +13,7 @@ export interface IAuthInfrastructure {
   authenticateUser(
     userCredentials: IUserCredentials
   ): Promise<Response<IUser, {}>>;
+  createNewUser(user: INewUserDetails): Promise<Response<IUser, {}>>;
 }
 
 export class AuthService {
@@ -35,7 +36,12 @@ export class AuthService {
     const refreshToken = this.generateRefreshToken();
     return await this.allAuthUsers.saveRefreshTokenToUser(userId, refreshToken);
   }
+
+  async createNewUser(newUser: INewUserDetails): Promise<Response<IUser, {}>> {
+    return this.allAuthUsers.createNewUser(newUser);
+  }
+
   private generateRefreshToken(): string {
-    return randomBytes(128).toString("hex");
+    return randomBytes(32).toString("hex");
   }
 }
