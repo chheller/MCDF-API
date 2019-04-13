@@ -1,5 +1,5 @@
-import { Response, NotImplementedResponse } from "../../../global/interfaces";
-import { IUser, INewUserDetails } from "../domain/model";
+import { NotImplementedResponse, Response } from "../../../global/interfaces";
+import { INewUserDetails, IUser } from "../domain/model";
 import { AllUsersMongo } from "../repository/allUsersMongo";
 
 export interface AllUsersService {

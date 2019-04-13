@@ -1,5 +1,5 @@
+import { NotImplementedResponse, Response } from "../../../global/interfaces";
 import { INewUserDetails, IUser } from "../domain/model";
-import { Response, NotImplementedResponse } from "../../../global/interfaces";
 
 export class AllUsersMongo {
   constructor() {}

@@ -53,19 +53,13 @@ export class AuthController extends BaseController {
                   })
                   .json({ claim: claimTokenResponse.payload });
               default:
-                return res
-                  .status(claimTokenResponse.status)
-                  .json(claimTokenResponse.payload);
+                return next(claimTokenResponse);
             }
           default:
-            return res
-              .status(saveTokenResponse.status)
-              .json(saveTokenResponse.payload);
+            return next(saveTokenResponse);
         }
       default:
-        return res
-          .status(authenticateResponse.status)
-          .json(authenticateResponse.payload);
+        return next(authenticateResponse);
     }
   }
   @post("/unauthn")

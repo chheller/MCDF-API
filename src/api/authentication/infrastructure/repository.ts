@@ -5,7 +5,9 @@ import {
   ErrorResponse,
   NotFoundResponse,
   Response,
-  SuccessResponse
+  ServiceResponse,
+  SuccessResponse,
+  UnauthorizedResponse
 } from "../../../global/interfaces";
 import { connectToMongo, getCollection } from "../../../global/mongodb-utils";
 import { createJWToken } from "../../../global/utils";
@@ -13,7 +15,6 @@ import { IUser } from "../../user/domain/model";
 import { IAuthInfrastructure } from "../application/service";
 import { IUserCredentials, IUserWithAuth } from "../domain/model";
 import { IUserAuthn } from "./model";
-import { logger } from "../../../global/logger";
 
 export class AllAuthUsers implements IAuthInfrastructure {
   private static db: Db;
@@ -29,28 +30,29 @@ export class AllAuthUsers implements IAuthInfrastructure {
 
   public async authenticateUser(
     userCredentials: IUserCredentials
-  ): Promise<Response<IUser, {}>> {
+  ): Promise<Response<IUser, null>> {
     try {
       const { username, password } = userCredentials;
 
       const authUser = await this.authUsersCollection.findOne({ username });
+      if (!authUser) return new NotFoundResponse(null, 404, "User not found");
+
       const isAuthorized = await compare(password, authUser.password);
 
       if (isAuthorized) {
         const { username, roles, id } = authUser;
         return new SuccessResponse({ username, roles, id } as IUser);
       } else {
-        return new NotFoundResponse();
+        return new UnauthorizedResponse(null);
       }
     } catch (err) {
-      logger.error(err);
-      return new ErrorResponse();
+      return new ErrorResponse(null);
     }
   }
 
   public async generateClaimToken(
     refreshToken: string
-  ): Promise<Response<string>> {
+  ): Promise<ServiceResponse<string>> {
     try {
       const mongoResponse = await this.authUsersCollection.findOne({
         refreshTokens: refreshToken
@@ -62,8 +64,6 @@ export class AllAuthUsers implements IAuthInfrastructure {
 
       return new SuccessResponse(claimToken);
     } catch (err) {
-      // TODO: Handle errors like 'token not found' or errors creating the JWT
-      logger.error(err);
       return new ErrorResponse(err);
     }
   }
@@ -71,7 +71,7 @@ export class AllAuthUsers implements IAuthInfrastructure {
   public async saveRefreshTokenToUser(
     userId: string,
     token: string
-  ): Promise<Response<string>> {
+  ): Promise<ServiceResponse<string>> {
     try {
       const mongoResponse = await this.authUsersCollection.findOneAndUpdate(
         { id: userId },
@@ -82,7 +82,6 @@ export class AllAuthUsers implements IAuthInfrastructure {
       }
     } catch (err) {
       // TODO: Handle more specific errors
-      logger.error(err);
       return new ErrorResponse(userId);
     }
   }

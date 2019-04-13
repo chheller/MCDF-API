@@ -1,11 +1,7 @@
 import { NextFunction, Request, Response } from "express";
+import { RequestHandler } from "express-serve-static-core";
 import { ObjectSchema, validate, ValidationOptions } from "joi";
-import {
-  ApiError,
-  NotFoundError,
-  UnauthorizedAccessError,
-  UnauthorizedApiError
-} from "../global/errors";
+import { ServiceResponse, ValidationErrorResponse } from "../global/interfaces";
 import { logger } from "../global/logger";
 import { verifyJWToken } from "../global/utils";
 
@@ -53,60 +49,49 @@ export async function handleResponse(
   next: NextFunction
 ) {
   if (err) {
-    logger.error(`${err.status || ""}${err.stack}`);
     if (res.headersSent) return next(err);
-    if (err instanceof UnauthorizedApiError) {
-      res.status(500).send({
-        name: "server_error",
-        message: "Server encountered an unexpected error"
-      });
-    } else if (err instanceof ApiError) {
+    if (err instanceof ServiceResponse) {
+      logger.error(
+        `[${err.status}] ${err.message} ${
+          err.payload ? JSON.stringify(err.payload) : ""
+        }`
+      );
       res
-        .status(err.apiError.status)
-        .send({ name: err.apiError.name, message: err.apiError.message });
+        .status(err.status)
+        .json({ message: err.message, payload: err.payload });
     } else {
-      if (err instanceof UnauthorizedAccessError) {
-        res
-          .status(401)
-          .send({ name: err.name || "server_error", message: err.message });
-      }
-      if (err instanceof NotFoundError) {
-        res.status(404).send({ name: err.name, message: err.message });
-      } else {
-        res
-          .status(500)
-          .send({ name: err.name || "server_error", message: err.message });
-      }
+      logger.error(
+        `${`[${err.status}] ` || ""}${err.stack || err.message || err.detail}`
+      );
+      res
+        .status(500)
+        .send({ name: err.name || "server_error", message: err.message });
     }
   }
 }
 
-export function validateRequest<T>(validationSchema: ObjectSchema) {
-  const validationOptions: ValidationOptions = {
-    abortEarly: true,
-    stripUnknown: true
-  };
-
-  return (err: any, req: Request, res: Response, next: NextFunction) => {
+export function validateRequest<T>(
+  validationSchema: ObjectSchema
+): RequestHandler {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const validationOptions: ValidationOptions = {
+      abortEarly: true,
+      stripUnknown: true
+    };
     const { error, value } = validate<T>(
       req.body,
       validationSchema,
       validationOptions
     );
     if (error) {
-      const JoiError = {
-        status: "failed",
-        error: {
-          original: err._object,
-          details: err.details.map(
-            ({ message, type }: { [key: string]: string }) => ({
-              message: message.replace(/['"]/g, ""),
-              type
-            })
-          )
-        }
-      };
-      return res.status(422).json(JoiError);
+      const JoiError = new ValidationErrorResponse({
+        original: error._object,
+        details: error.details.map(({ message, type }) => ({
+          message: message.replace(/['"]/g, ""),
+          type
+        }))
+      });
+      return next(JoiError);
     }
     req.body = value;
     return next();
