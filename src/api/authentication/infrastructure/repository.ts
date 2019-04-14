@@ -16,6 +16,7 @@ import { INewUserDetails, IUser } from "../../user/domain/model";
 import { IAuthInfrastructure } from "../application/service";
 import { IUserCredentials, IUserWithAuth } from "../domain/model";
 import { IUserAuthn } from "./model";
+import { logger } from "../../../global/logger";
 
 export class AllAuthUsers implements IAuthInfrastructure {
   private static db: Db;
@@ -58,6 +59,7 @@ export class AllAuthUsers implements IAuthInfrastructure {
       const mongoResponse = await this.authUsersCollection.findOne({
         refreshTokens: refreshToken
       });
+      if (!mongoResponse) return new NotFoundResponse(refreshToken);
       const claimToken = await createJWToken<IUserWithAuth>({
         id: mongoResponse.id,
         roles: mongoResponse.roles

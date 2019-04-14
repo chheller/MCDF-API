@@ -1,9 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import { RequestHandler } from "express-serve-static-core";
 import { ObjectSchema, validate, ValidationOptions } from "joi";
-import { ServiceResponse, ValidationErrorResponse } from "../global/interfaces";
+import {
+  ServiceResponse,
+  ValidationErrorResponse,
+  UnauthorizedResponse
+} from "../global/interfaces";
 import { logger } from "../global/logger";
 import { verifyJWToken } from "../global/utils";
+import environment from "./config/environment";
 
 export async function isAuthenticated(
   req: Request,
@@ -65,9 +70,20 @@ export async function handleResponse(
           err.payload ? JSON.stringify(err.payload) : ""
         }`
       );
-      res
-        .status(err.status)
-        .json({ message: err.message, payload: err.payload });
+      if (err instanceof UnauthorizedResponse) {
+        res
+          .status(err.status)
+          .clearCookie("authentication-refresh", {
+            signed: true,
+            httpOnly: true,
+            secure: environment.NODE_ENV === "prod"
+          })
+          .send();
+      } else {
+        res
+          .status(err.status)
+          .json({ message: err.message, payload: err.payload });
+      }
     } else {
       logger.error(
         `${`[${err.status}] ` || ""}${err.stack || err.message || err.detail}`

@@ -8,7 +8,10 @@ import {
 } from "../../../core/decorators/express-route-decorators";
 import { BaseController } from "../../../global/base-controller";
 import { AuthService } from "../application/service";
-import { ResponseTypes } from "../../../global/interfaces";
+import {
+  ResponseTypes,
+  UnauthorizedResponse
+} from "../../../global/interfaces";
 import environment from "../../../core/config/environment";
 import { INewUserDetails, signupSchema } from "../../user/domain/model";
 
@@ -23,9 +26,13 @@ export class AuthController extends BaseController {
     const serviceResponse = await this.authService.generateClaimToken(
       refreshToken
     );
-    const { status, payload } = serviceResponse;
-
-    res.status(status).json({ payload });
+    const { status, payload, type } = serviceResponse;
+    switch (type) {
+      case ResponseTypes.success:
+        return res.status(status).json({ payload });
+      default:
+        return next(serviceResponse);
+    }
   }
   @post("/login", validateRequest<IUserCredentials>(loginSchema))
   async login(req: Request, res: Response, next: NextFunction) {
@@ -76,5 +83,9 @@ export class AuthController extends BaseController {
       case ResponseTypes.success:
         res.status(200).json({ payload: serviceResponse.payload });
     }
+  }
+  @post("/unauthn")
+  public async unauthn(req: Request, res: Response, next: NextFunction) {
+    next(new UnauthorizedResponse());
   }
 }

@@ -11,8 +11,7 @@ export type IUserWithAuth = Pick<IUser, IUserAuth>;
 
 export const loginSchema = object()
   .keys({
-    username: string(),
-    email: string().email(),
-    password: string()
+    username: string().required(),
+    password: string().required()
   })
   .or("username", "email");
