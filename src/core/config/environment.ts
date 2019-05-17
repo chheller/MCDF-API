@@ -7,7 +7,9 @@ const {
   JWT_SECRET,
   MONGO_HOSTNAME,
   COOKIE_SECRET,
-  NODE_ENV
+  NODE_ENV,
+  USERS_DB_URI,
+  DEFAULT_DB_URI
 } = env;
 
 const environment: Environment = {
@@ -17,7 +19,9 @@ const environment: Environment = {
   MONGO_HOSTNAME,
   MONGO_PORT: parseInt(env.MONGO_PORT),
   COOKIE_SECRET,
-  NODE_ENV
+  NODE_ENV,
+  USERS_DB_URI,
+  DEFAULT_DB_URI
 };
 export default environment;
 
@@ -29,4 +33,6 @@ export interface Environment {
   JWT_SECRET: string;
   COOKIE_SECRET: string;
   NODE_ENV: string;
+  USERS_DB_URI: string;
+  DEFAULT_DB_URI: string;
 }

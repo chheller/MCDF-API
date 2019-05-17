@@ -1,6 +1,6 @@
 import env from './core/config/environment';
 import Server from './core/server';
-import { logger } from './core/logger';
+import { logger } from './global/logger';
 
 process.on('unhandledRejection', (reason, listener) => {
   logger.crit('Unhandled promise rejection ' + reason);
