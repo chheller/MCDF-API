@@ -9,5 +9,5 @@ process.on('unhandledRejection', (reason, listener) => {
 (async () => {
   const server = new Server(env);
   await server.init();
-  await server.start({ port: 5000 });
+  await server.start({ port: env.SERVER_PORT });
 })();

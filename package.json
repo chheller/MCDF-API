@@ -8,6 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "accesscontrol": "2.2.1",
+    "adm-zip": "^0.4.13",
     "axios": "0.18.0",
     "bcrypt": "^3.0.5",
     "body-parser": "1.18.3",
@@ -24,6 +25,7 @@
     "winston": "3.1.0"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.4.32",
     "@types/bcrypt": "^3.0.0",
     "@types/compression": "^0.0.36",
     "@types/cookie-parser": "^1.4.1",

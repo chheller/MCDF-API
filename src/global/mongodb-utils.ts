@@ -1,5 +1,5 @@
-import { MongoClient, Db } from "mongodb";
-import environment from "../core/config/environment";
+import { MongoClient, Db } from 'mongodb';
+import environment from '../core/config/environment';
 const {
   MONGO_ADMIN_USERNAME,
   MONGO_ADMIN_PASSWORD,
@@ -16,15 +16,10 @@ const mongoConfig = {
   auth: mongoAuth || undefined,
   useNewUrlParser: true
 };
-export const connectToMongo = async (
-  dbUri: string = DEFAULT_DB_URI
-): Promise<Db> => {
+export const connectToMongo = async (dbUri: string = DEFAULT_DB_URI): Promise<Db> => {
   try {
     const mongoConnectionString = `mongodb://${MONGO_HOSTNAME}:${MONGO_PORT}/${dbUri}`;
-    const db = (await MongoClient.connect(
-      mongoConnectionString,
-      mongoConfig
-    )).db();
+    const db = (await MongoClient.connect(mongoConnectionString, mongoConfig)).db();
     // TODO: Log
     return db;
   } catch (err) {
