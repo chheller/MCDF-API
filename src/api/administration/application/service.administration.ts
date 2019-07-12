@@ -2,6 +2,7 @@ import { ModData } from '../domain/domain.administration';
 import { Response, ResponseTypes } from '../../../global/interfaces';
 import { AdminInfrastructure } from '../repository/repository.administration';
 import { ModsUpdateRequest } from '../interface/controller.administration';
+import { ServerStatus } from '../repository/java-server.administration';
 
 export interface IAdminInfrastructure {
   getAllMods(): Promise<Response<ModData[], string>>;
@@ -9,6 +10,7 @@ export interface IAdminInfrastructure {
   disableMod(mod: ModData): Promise<Response<any>>;
   renameMod(mod: ModData): Promise<Response<any>>;
   restartServer(): Promise<Response<any>>;
+  status(): Promise<Response<{ status: ServerStatus }>>;
 }
 
 export class AdminService {
@@ -43,5 +45,8 @@ export class AdminService {
   }
   public async restartServer(): Promise<Response<any>> {
     return this.adminInfra.restartServer();
+  }
+  public async status(): Promise<Response<{ status: ServerStatus }>> {
+    return this.adminInfra.status();
   }
 }

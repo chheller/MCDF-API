@@ -1,46 +1,16 @@
+require('dotenv').config();
 const { env } = process;
-const {
-  MONGO_ADMIN_PASSWORD,
-  MONGO_ADMIN_USERNAME,
-  JWT_SECRET,
-  MONGO_HOSTNAME,
-  COOKIE_SECRET,
-  NODE_ENV,
-  USERS_DB_URI,
-  DEFAULT_DB_URI,
-  SERVER_PORT,
-  MONGO_PORT,
-  ENABLED_MOD_PATHS,
-  DISABLED_MOD_PATHS
-} = env;
-
-const environment: Environment = {
-  MONGO_ADMIN_PASSWORD,
-  MONGO_ADMIN_USERNAME,
-  JWT_SECRET,
-  MONGO_HOSTNAME,
-  MONGO_PORT: parseInt(MONGO_PORT),
-  COOKIE_SECRET,
-  NODE_ENV,
-  USERS_DB_URI,
-  DEFAULT_DB_URI,
-  SERVER_PORT: parseInt(SERVER_PORT),
-  ENABLED_MOD_PATHS,
-  DISABLED_MOD_PATHS
-};
-export default environment;
-
-export interface Environment {
-  MONGO_PORT: number;
-  MONGO_HOSTNAME: string;
-  MONGO_ADMIN_PASSWORD: string;
-  MONGO_ADMIN_USERNAME: string;
-  JWT_SECRET: string;
-  COOKIE_SECRET: string;
-  NODE_ENV: string;
-  USERS_DB_URI: string;
-  DEFAULT_DB_URI: string;
-  SERVER_PORT: number;
-  ENABLED_MOD_PATHS: string;
-  DISABLED_MOD_PATHS: string;
-}
+export const COOKIE_SECRET = env.COOKIE_SECRET;
+export const CORS_HOSTS = env.CORS_HOSTS || ['http://localhost:3000', 'http://localhost:42402'];
+export const DEFAULT_DB_URI = env.DEFAULT_DB_URI;
+export const DISABLED_MOD_PATHS = env.DISABLED_MOD_PATHS;
+export const ENABLED_MOD_PATHS = env.ENABLED_MOD_PATHS;
+export const HOST_NAME = env.HOST_NAME;
+export const JWT_SECRET = env.JWT_SECRET;
+export const MONGO_ADMIN_PASSWORD = env.MONGO_ADMIN_PASSWORD;
+export const MONGO_ADMIN_USERNAME = env.MONGO_ADMIN_USERNAME;
+export const MONGO_HOSTNAME = env.MONGO_HOSTNAME;
+export const MONGO_PORT = parseInt(env.MONGO_PORT);
+export const NODE_ENV = env.NODE_ENV;
+export const SERVER_PORT = parseInt(env.SERVER_PORT) || 42404;
+export const SERVER_JAR_PATH = env.SERVER_JAR_PATH;

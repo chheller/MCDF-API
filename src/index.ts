@@ -1,4 +1,4 @@
-import env from './core/config/environment';
+import * as env from './core/config/environment';
 import Server from './core/server';
 import { logger } from './global/logger';
 
@@ -9,5 +9,5 @@ process.on('unhandledRejection', (reason, listener) => {
 (async () => {
   const server = new Server(env);
   await server.init();
-  await server.start({ port: env.SERVER_PORT });
+  await server.start();
 })();

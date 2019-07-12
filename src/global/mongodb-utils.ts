@@ -1,12 +1,11 @@
-import { MongoClient, Db } from 'mongodb';
-import environment from '../core/config/environment';
-const {
-  MONGO_ADMIN_USERNAME,
+import { Db, MongoClient } from 'mongodb';
+import {
+  DEFAULT_DB_URI,
   MONGO_ADMIN_PASSWORD,
+  MONGO_ADMIN_USERNAME,
   MONGO_HOSTNAME,
-  MONGO_PORT,
-  DEFAULT_DB_URI
-} = environment;
+  MONGO_PORT
+} from '../core/config/environment';
 
 const mongoAuth =
   MONGO_ADMIN_USERNAME && MONGO_ADMIN_PASSWORD

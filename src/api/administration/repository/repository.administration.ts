@@ -1,26 +1,69 @@
 import { readdir } from 'fs';
 import { IAdminInfrastructure } from '../application/service.administration';
 import * as AdmZip from 'adm-zip';
-import env from '../../../core/config/environment';
+
 import { ModData } from '../domain/domain.administration';
-import { Response, SuccessResponse } from '../../../global/interfaces';
+import {
+  Response,
+  SuccessResponse,
+  ErrorResponse,
+  NotImplementedResponse,
+  ServiceUnavailableResponse
+} from '../../../global/interfaces';
+import { ENABLED_MOD_PATHS, DISABLED_MOD_PATHS } from '../../../core/config/environment';
+import { JavaServer, ServerStatus } from './java-server.administration';
+import { logger } from '../../../global/logger';
 export class AdminInfrastructure implements IAdminInfrastructure {
+  private static serverService = new JavaServer();
   constructor() {}
 
   //#region Public interface
-  public static async setup() {}
+  public static async setup() {
+    this.serverService.start();
+  }
+
+  public static async teardown() {
+    await this.serverService.stop();
+  }
 
   public async getAllMods(): Promise<Response<ModData[], string>> {
-    const activeModData: ModData[] = await this.getModData(env.ENABLED_MOD_PATHS);
-    const disabledModData: ModData[] = await this.getModData(env.DISABLED_MOD_PATHS);
+    const activeModData: ModData[] = await this.getModData(ENABLED_MOD_PATHS);
+    const disabledModData: ModData[] = await this.getModData(DISABLED_MOD_PATHS);
     // TODO: Handle disabled Mods by checking the disabled mods path
     return new SuccessResponse([...activeModData, ...disabledModData]);
   }
 
-  public async disableMod(mod: ModData): Promise<Response<any>> {}
-  public async enableMod(mod: ModData): Promise<Response<any>> {}
-  public async renameMod(mod: ModData): Promise<Response<any>> {}
-  public async restartServer(): Promise<Response<any>> {}
+  public async disableMod(mod: ModData): Promise<Response<any>> {
+    return new NotImplementedResponse();
+  }
+  public async enableMod(mod: ModData): Promise<Response<any>> {
+    return new NotImplementedResponse();
+  }
+  public async renameMod(mod: ModData): Promise<Response<any>> {
+    return new NotImplementedResponse();
+  }
+  public async restartServer(): Promise<Response<boolean>> {
+    try {
+      const { payload } = await this.status();
+      if (payload.status === 'online') {
+        AdminInfrastructure.serverService.restart();
+        return new SuccessResponse();
+      } else {
+        return new ServiceUnavailableResponse();
+      }
+    } catch (err) {
+      return new ErrorResponse(err);
+    }
+  }
+
+  public async status(): Promise<Response<{ status: ServerStatus }>> {
+    try {
+      const serverResponse = AdminInfrastructure.serverService.status();
+      return new SuccessResponse({ status: serverResponse } as const);
+    } catch (err) {
+      return new ErrorResponse({ status: 'unknown' } as const);
+    }
+  }
 
   //#endregion
 

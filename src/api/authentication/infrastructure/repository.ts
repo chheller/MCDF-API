@@ -1,7 +1,6 @@
 import { compare, hash } from 'bcrypt';
 import { Collection, Db } from 'mongodb';
 import { v4 } from 'uuid';
-import environment from '../../../core/config/environment';
 import {
   ErrorResponse,
   NotFoundResponse,
@@ -10,13 +9,13 @@ import {
   SuccessResponse,
   UnauthorizedResponse
 } from '../../../global/interfaces';
+import { logger } from '../../../global/logger';
 import { connectToMongo, getCollection } from '../../../global/mongodb-utils';
 import { createJWToken } from '../../../global/utils';
 import { INewUserDetails, IUser } from '../../user/domain/model';
 import { IAuthInfrastructure } from '../application/service';
 import { IUserCredentials, IUserWithAuth } from '../domain/model';
 import { IUserAuthn } from './model';
-import { logger } from '../../../global/logger';
 
 export class AllAuthUsers implements IAuthInfrastructure {
   private static db: Db;
@@ -24,8 +23,8 @@ export class AllAuthUsers implements IAuthInfrastructure {
 
   constructor(private authUsersCollection = AllAuthUsers.collection) {}
 
-  public static async setup(usersDb = environment.USERS_DB_URI) {
-    AllAuthUsers.db = await connectToMongo(usersDb);
+  public static async setup() {
+    AllAuthUsers.db = await connectToMongo();
     // TODO: Refactor into envvar
     AllAuthUsers.collection = getCollection(AllAuthUsers.db, 'auths');
   }

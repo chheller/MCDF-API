@@ -6,8 +6,8 @@ import { controller, post } from '../../../core/decorators/express-route-decorat
 import { BaseController } from '../../../global/base-controller';
 import { AuthService } from '../application/service';
 import { ResponseTypes, UnauthorizedResponse } from '../../../global/interfaces';
-import environment from '../../../core/config/environment';
 import { INewUserDetails, signupSchema } from '../../user/domain/model';
+import { NODE_ENV } from '../../../core/config/environment';
 
 @controller('/authn')
 export class AuthController extends BaseController {
@@ -48,7 +48,7 @@ export class AuthController extends BaseController {
                     maxAge: 90000,
                     signed: true,
                     httpOnly: true,
-                    secure: environment.NODE_ENV === 'prod'
+                    secure: NODE_ENV === 'prod'
                   })
                   .json({ claim: claimTokenResponse.payload });
               default:

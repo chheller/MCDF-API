@@ -1,13 +1,13 @@
-import { controller, get, post } from '../../../core/decorators/express-route-decorators';
-import { Request, Response, Router } from 'express';
 import { NextFunction } from 'connect';
-import { ResponseTypes } from '../../../global/interfaces';
+import { Request, Response, Router } from 'express';
+import { controller, get, post } from '../../../core/decorators/express-route-decorators';
 import { BaseController } from '../../../global/base-controller';
+import { ResponseTypes } from '../../../global/interfaces';
 import { AdminService } from '../application/service.administration';
 import { ModData } from '../domain/domain.administration';
 
 @controller('/administration')
-export class ModsController extends BaseController {
+export class AdminController extends BaseController {
   constructor(router?: Router, private modsService = new AdminService()) {
     super(router);
   }
@@ -32,7 +32,17 @@ export class ModsController extends BaseController {
   }
 
   @post('/server/restart')
-  public async restartServer(req: Request, res: Response, next: NextFunction) {}
+  public async restartServer(req: Request, res: Response, next: NextFunction) {
+    const serviceResponse = await this.modsService.restartServer();
+    res.status(serviceResponse.status).send(serviceResponse.message);
+  }
+
+  @get('/server/status')
+  public async getServerStatus(req: Request, res: Response, next: NextFunction) {
+    const serviceResponse = await this.modsService.status();
+
+    res.status(serviceResponse.status).send(serviceResponse.payload);
+  }
 }
 
 export interface ModsUpdateRequest {
